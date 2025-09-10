@@ -13,6 +13,7 @@ import tempfile
 from cred import FSIS_LOGIN, FSIS_PASSWORD, FSIS_URL
 from pathlib import Path
 import zipfile
+from selenium.webdriver.support.ui import Select
 
 
 def access_fsis():
@@ -70,9 +71,7 @@ def access_fsis():
         )
         login_button.click()
 
-        print("29293")
-
-        time.sleep(20)
+        time.sleep(1)
 
         hoje = datetime.today()
         ontem = hoje - timedelta(days=1)
@@ -105,11 +104,13 @@ def access_fsis():
         confirmar_button = driver.find_element(By.XPATH, '//input[@type="button" and @value="CONFIRMAR"]')
         confirmar_button.click()
 
-        time.sleep(5)
+        time.sleep(3)
 
         selecionar_todas = driver.find_element(By.XPATH,
                                                '//div[@class="btn btn-default" and text()="Selecionar todas"]')
         selecionar_todas.click()
+
+        time.sleep(3)
 
         download_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable(
@@ -117,12 +118,25 @@ def access_fsis():
         )
         download_button.click()
 
+        time.sleep(2)
+
+        select_organizar = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "comboOrganizar"))
+        )
+
+        organizar_dropdown = Select(select_organizar)
+        organizar_dropdown.select_by_value("Padrão")
+
+        time.sleep(3)
+
         btn_xml = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable(
                 (By.XPATH, '//button[contains(@class, "btn-img") and .//span[text()="Apenas XMLs"]]')
             )
         )
         btn_xml.click()
+
+        time.sleep(2)
 
         zip_path = None
         for _ in range(30):
@@ -136,7 +150,7 @@ def access_fsis():
             print("ZIP não encontrado.")
             return
 
-        destino = Path(r"\\server\JTDTRANSPORTES2\ANALITCS\ACOMPANHAMENTO DE CARGAS\xml")
+        destino = Path(r"\\srv004-jtd\Analitics\ACOMPANHAMENTO DE CARGAS\xml")
         destino.mkdir(parents=True, exist_ok=True)
 
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -152,7 +166,7 @@ def access_fsis():
     finally:
         driver.quit()
 
-# access_fsis()
+access_fsis()
 
 schedule.every().day.at("09:05").do(access_fsis)
 

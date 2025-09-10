@@ -37,7 +37,7 @@ def access_api():
     if df_filtrado.empty:
         print("Nenhum dado encontrado para ontem.")
     else:
-        caminho_arquivo_destino = r"\\server\JTDTRANSPORTES2\ANALITCS\ACOMPANHAMENTO DE CARGAS\CARGAS DIRETA - MONDIAL.xlsx"
+        caminho_arquivo_destino = r"\\srv004-jtd\Analitics\ACOMPANHAMENTO DE CARGAS\CARGAS DIRETA - MONDIAL.xlsx"
         sheet_name = 'Cargas'
 
         book = load_workbook(caminho_arquivo_destino)

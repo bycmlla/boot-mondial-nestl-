@@ -185,7 +185,7 @@ def segundo_acesso_():
 
                         tratar_e_formatar_arquivo(
                             caminho_baixado,
-                            r"\\server\JTDTRANSPORTES2\ANALITCS\ACOMPANHAMENTO DE CARGAS\ok entregas.xlsx"
+                            r"\\srv004-jtd\Analitics\ACOMPANHAMENTO DE CARGAS\ok entregas.xlsx"
                         )
                         print("Arquivo tratado e salvo no destino.")
                         baixado = True

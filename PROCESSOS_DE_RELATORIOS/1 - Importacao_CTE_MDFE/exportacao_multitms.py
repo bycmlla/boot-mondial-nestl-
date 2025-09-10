@@ -1,6 +1,7 @@
 import tempfile
 import time
 import os
+import pyautogui
 import schedule
 from selenium import webdriver
 from datetime import datetime, timedelta

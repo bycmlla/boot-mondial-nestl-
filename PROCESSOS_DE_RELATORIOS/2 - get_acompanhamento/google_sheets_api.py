@@ -1,20 +1,17 @@
 import requests
 import pandas as pd
-from datetime import datetime
 from google.oauth2.service_account import Credentials
 import gspread
 
-URL_API = "http://10.0.0.111:30800/v1/md?data=20240310"
-ABA_NOME = "acompanhamento"
+URL_API = "http://10.0.0.3:30800/v1/md?data=20250801"
+ABA_NOME = "Acompanhamento"
 CAMINHO_CREDENCIAIS = "credenciais.json"
-KEY = "1cvVZ0CporgR_-OJGsiIUk-SE3GF5g3CQ0KJYDP09AXM"
+KEY = "1hTgeKcoVtBrDbIh86eOtL8x0fO0gecjJd1RBnGHyz6c"
 
-DATA_LIMITE = datetime.strptime("31/07/2025", "%d/%m/%Y")
 
 def atualizar_google_sheets():
     response = requests.get(URL_API)
     response.raise_for_status()
-
     dados = response.json()
 
     print("=== 5 primeiras linhas da API ===")
@@ -25,12 +22,32 @@ def atualizar_google_sheets():
     df = pd.DataFrame(dados)
 
     if 'dataemissao' in df.columns:
-        # Ajusta para datetime
         df['dataemissao'] = pd.to_datetime(df['dataemissao'], errors='coerce')
-
-        df = df[df['dataemissao'] > DATA_LIMITE]
-
         df['dataemissao'] = df['dataemissao'].dt.strftime("%d/%m/%Y")
+
+    tomadores = [
+        "NESTLE BRASIL LTDA",
+        "NESTLE BRASIL LTDA.",
+        "Nestle Brasil Ltda.",
+        "NESTLE DO BRASIL LTDA",
+        "Nestle Nordeste Alimentos e Bebidas",
+        "NESTLE NORDESTE ALIMENTOS E BEBIDAS LTDA."
+    ]
+    df = df[df['tomador'].isin(tomadores)]
+
+    status_validos = ["BASE", "TRANSITO"]
+    df = df[df['statusentrega'].isin(status_validos)]
+
+    df['CONCAT'] = df['dataemissao'].astype(str) + " " + df['cnpjdestino'].astype(str)
+
+    colunas_para_remover = [
+        "tipodoc", "razaosocial", "cnpj", "valorpgtone",
+        "valortotal", "valorliquido", "saldo", "valornfe",
+        "peso", "volume", "dia", "cfop", "basecalculo", "icms", "nomefantasia", "inscricaoestadual", "valorpgto",
+        "fatura", "dataoco", "horaoco", "statusfatura", "mdfe", "manifesto", "cpfmotorista", "reboque1", "reboque2",
+        "chavecte", "statusmn", "situacao", "aliquota"
+    ]
+    df = df.drop(columns=[col for col in colunas_para_remover if col in df.columns])
 
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
@@ -42,12 +59,14 @@ def atualizar_google_sheets():
     spreadsheet = client.open_by_key(KEY)
     sheet = spreadsheet.worksheet(ABA_NOME)
 
+    # Limpa e atualiza a aba
     sheet.clear()
     sheet.append_row(df.columns.tolist())
     if not df.empty:
         sheet.append_rows(df.values.tolist())
 
     print(f"✅ Dados atualizados na aba '{ABA_NOME}' com {len(df)} registros.")
+
 
 if __name__ == "__main__":
     atualizar_google_sheets()
